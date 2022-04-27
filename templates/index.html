@@ -19,6 +19,7 @@
         </ul>
     </p>
     {% endif %} {% endwith %}
+    {% if allowed_upload %}
         <div class="content">
             <form class="centered" id="uploadForm">
                 <dl>
@@ -61,7 +62,7 @@
 
             xhr.send(new FormData(uploadForm));
 
-            xhr.onload = function() {
+            xhr.onload = async function() {
                 data = JSON.parse(xhr.responseText);
                 status = xhr.status;
                 if (status != 200 ) {
@@ -69,11 +70,13 @@
                 }
                 else {
                     video = data.clip
+                    await sleep(500) // Video is broken if the page is instantly loaded. Would be better if the video URL
                     document.location.href = window.location.origin+"/v/"+video
                 }
             }
         }
     </script>
+    {% endif %}
 </body>
 
 </html>

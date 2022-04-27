@@ -34,22 +34,24 @@ def random_filename(length):
     str = string.ascii_lowercase
     return ''.join(random.choice(str) for i in range(length))
 
-@app.route('/')
-def upload_form():
-    return render_template('index.html')
-
-@app.route('/upload', methods=['POST'])
-def upload_video():
+def check_ip(request):
     ip = ""
-    response = {}
-    status_code = 200
     if "X-Real-IP" in request.headers:
         ip = request.headers["X-Real-IP"]
     if "X-Forwarded-For" in request.headers:
         ip = request.headers["X-Forwarded-For"]
     else:
         ip = request.remote_addr
-    if ip_address(ip) not in ip_network(allowed_upload):
+    return ip_address(ip) in ip_network(allowed_upload)
+
+@app.route('/')
+def upload_form():
+    allowed_upload = check_ip(request)
+    return render_template('index.html', allowed_upload=allowed_upload)
+
+@app.route('/upload', methods=['POST'])
+def upload_video():
+    if not check_ip(request):
         response = {"success": False, "message": "You are not authorized to upload"}
         status_code = 401
     if 'clip' not in request.files:
