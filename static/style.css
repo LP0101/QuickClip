@@ -1,0 +1,16 @@
+body {
+    background-color: #202020;
+    color: lightgrey
+}
+
+li {
+    list-style-type: none;
+}
+
+.centered {
+    margin: auto;
+    text-align: center;
+    width: 50%;
+    border: 3px solid darkred; 
+    padding: 10px;
+}

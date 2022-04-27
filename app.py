@@ -31,7 +31,8 @@ def upload_video():
         return redirect(request.uri)
     else:
         if not file.mimetype.startswith("video/"):
-            return "Not a video", 400
+            flash ("Please upload a video file")
+            return redirect('/')
         filename = random_filename(8)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         return redirect(f"/v/{filename}")

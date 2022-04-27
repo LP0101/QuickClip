@@ -1,18 +1,24 @@
 <!doctype html>
-<title>Python Flask - Video Upload and Play Example</title>
-<h2>Select a video to upload and play</h2>
+<html>
+<title>QuickClip</title>
+<head>
+	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<h2 class="centered"><span>Upload a file!</span></h2>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
 <p>
-	{% with messages = get_flashed_messages() %}
-	  {% if messages %}
-		<ul>
+		<ul class="centered">
 		{% for message in messages %}
 		  <li>{{ message }}</li>
 		{% endfor %}
 		</ul>
+</p>
 	  {% endif %}
 	{% endwith %}
-</p>
-<form method="post" action="/" enctype="multipart/form-data">
+<div class="foo">
+<form class="centered" method="post" action="/" enctype="multipart/form-data">
     <dl>
 		<p>
 			<input type="file" name="clip" autocomplete="off" required>
@@ -22,3 +28,6 @@
 		<input type="submit" value="Upload">
 	</p>
 </form>
+</div>
+</body>
+</html>
