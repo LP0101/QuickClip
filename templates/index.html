@@ -19,19 +19,64 @@
         </ul>
     </p>
     {% endif %} {% endwith %}
+    {% if allowed_upload %}
         <div class="content">
-            <form class="centered" method="post" action="/" enctype="multipart/form-data">
+            <form class="centered" id="uploadForm">
                 <dl>
                     <p>
-                        <input type="file" name="clip" autocomplete="off" required>
+                        <input type="file" name="clip" id="inpFile">
                     </p>
                 </dl>
                 <p>
-                    <input type="submit" value="Upload">
+                    <input class="button" type="submit" value="Upload">
                 </p>
             </form>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-bar-fill">
+                    <span class="progress-bar-text">0%</span>
+                </div>
+            </div>
         </div>
     </div>
+    <script>
+        const uploadForm = document.getElementById("uploadForm");
+        const inpFile = document.getElementById("inpFile")
+        const progressBarFill = document.querySelector("#progressBar > .progress-bar-fill");
+        const progressBarText = progressBarFill.querySelector(".progress-bar-text");
+        const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+        uploadForm.addEventListener("submit", uploadFile);
+
+        function uploadFile (e) {
+            e.preventDefault();
+
+            const xhr = new XMLHttpRequest();
+
+            xhr.open("POST", "/upload")
+            xhr.upload.addEventListener("progress", e => {
+                const percent = e.lengthComputable ? (e.loaded / e.total) * 100 : 0;
+
+                progressBarFill.style.width = percent.toFixed(2) + "%";
+                progressBarText.textContent = percent.toFixed(2) + "%";
+            });
+
+            xhr.send(new FormData(uploadForm));
+
+            xhr.onload = async function() {
+                data = JSON.parse(xhr.responseText);
+                status = xhr.status;
+                if (status != 200 ) {
+                    alert(`Error ${status}: ${data.message}`);
+                }
+                else {
+                    video = data.clip
+                    await sleep(500) // Video is broken if the page is instantly loaded. Would be better if the video URL
+                    document.location.href = window.location.origin+"/v/"+video
+                }
+            }
+        }
+    </script>
+    {% endif %}
 </body>
 
 </html>

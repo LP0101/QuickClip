@@ -4,8 +4,9 @@ import random
 from ipaddress import ip_network, ip_address
 import logging
 from venv import create
+from time import sleep
 
-from flask import Flask, flash, render_template, request, redirect, send_from_directory
+from flask import Flask, flash, render_template, request, redirect, send_from_directory, jsonify
 
 
 library_path = os.getenv("QUICKCLIP_LIBRARY_PATH")
@@ -33,12 +34,7 @@ def random_filename(length):
     str = string.ascii_lowercase
     return ''.join(random.choice(str) for i in range(length))
 
-@app.route('/')
-def upload_form():
-    return render_template('index.html')
-
-@app.route('/', methods=['POST'])
-def upload_video():
+def check_ip(request):
     ip = ""
     if "X-Real-IP" in request.headers:
         ip = request.headers["X-Real-IP"]
@@ -46,23 +42,36 @@ def upload_video():
         ip = request.headers["X-Forwarded-For"]
     else:
         ip = request.remote_addr
-    if ip_address(ip) not in ip_network(allowed_upload):
-        flash("You are not authorized to upload")
-        return redirect("/")
+    return ip_address(ip) in ip_network(allowed_upload)
+
+@app.route('/')
+def upload_form():
+    allowed_upload = check_ip(request)
+    return render_template('index.html', allowed_upload=allowed_upload)
+
+@app.route('/upload', methods=['POST'])
+def upload_video():
+    if not check_ip(request):
+        response = {"success": False, "message": "You are not authorized to upload"}
+        status_code = 401
     if 'clip' not in request.files:
-        flash('No video uploaded')
-        return redirect('/')
+        response = {"success": False, "message": "'clip' not found in upload"}
+        status_code = 400
     file = request.files['clip']
     if file.filename == '':
-        flash('No video selected for uploaded')
-        return redirect(request.uri)
+        response = {"success": False, "message": "empty upload"}
+        status_code = 400
     else:
         if not file.mimetype.startswith("video/"):
-            flash ("Please upload a video file")
-            return redirect('/')
+            response = {"success": False, "message": "File is not a video"}
+            status_code = 400
         filename = random_filename(8)
         file.save(os.path.join(library_path, filename))
-        return redirect(f"/v/{filename}")
+        response = {"success": True, "clip": filename}
+        status_code = 200
+        sleep(1)
+    return jsonify(response), status_code
+
 
 @app.route('/files/<path:filename>')
 def custom_static(filename):
