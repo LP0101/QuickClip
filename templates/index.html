@@ -1,33 +1,37 @@
 <!doctype html>
 <html>
 <title>QuickClip</title>
+
 <head>
-	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
-<h2 class="centered"><span>Upload a file!</span></h2>
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<p>
-		<ul class="centered">
-		{% for message in messages %}
-		  <li>{{ message }}</li>
-		{% endfor %}
-		</ul>
-</p>
-	  {% endif %}
-	{% endwith %}
-<div class="foo">
-<form class="centered" method="post" action="/" enctype="multipart/form-data">
-    <dl>
-		<p>
-			<input type="file" name="clip" autocomplete="off" required>
-		</p>
-    </dl>
+    <div class="header">
+        <h1><a class="link" href="/">QuickClip</a></h1>
+    </div>
+    {% with messages = get_flashed_messages() %} {% if messages %}
     <p>
-		<input type="submit" value="Upload">
-	</p>
-</form>
-</div>
+        <ul class="alerts">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </p>
+    {% endif %} {% endwith %}
+        <div class="content">
+            <form class="centered" method="post" action="/" enctype="multipart/form-data">
+                <dl>
+                    <p>
+                        <input type="file" name="clip" autocomplete="off" required>
+                    </p>
+                </dl>
+                <p>
+                    <input type="submit" value="Upload">
+                </p>
+            </form>
+        </div>
+    </div>
 </body>
+
 </html>

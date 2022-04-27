@@ -2,7 +2,7 @@ import os
 import string
 import random
 from unittest.util import _MAX_LENGTH
-import magic
+from ipaddress import ip_network, ip_address
 
 from flask import Flask, flash, render_template, request, redirect, send_from_directory
 # please note the import from `flask_uploads` - not `flask_reuploaded`!!
@@ -11,6 +11,7 @@ from flask import Flask, flash, render_template, request, redirect, send_from_di
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config["UPLOAD_FOLDER"] = os.getenv("QUICKCLIP_LIBRARY_PATH")
+app.config["ALLOWED_UPLOAD"] = os.getenv("QUICKCLIP_ALLOWED_UPLOAD", "0.0.0.0/0")
 
 def random_filename(length):
     str = string.ascii_lowercase
@@ -22,6 +23,16 @@ def upload_form():
 
 @app.route('/', methods=['POST'])
 def upload_video():
+    ip = ""
+    if "X-Real-IP" in request.headers:
+        ip = request.headers["X-Real-IP"]
+    if "X-Forwarded-For" in request.headers:
+        ip = request.headers["X-Forwarded-For"]
+    else:
+        ip = request.remote_addr
+    if ip_address(ip) not in ip_network(app.config["ALLOWED_UPLOAD"]):
+        flash("You are not authorized to upload")
+        return redirect("/")
     if 'clip' not in request.files:
         flash('No video uploaded')
         return redirect('/')

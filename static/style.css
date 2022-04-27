@@ -2,15 +2,59 @@ body {
     background-color: #202020;
     color: lightgrey
 }
+.header {
+    background-color: #101010;
+    padding: 20px;
+    text-align: center;
+    color: lightgrey; 
+}
 
-li {
+.link {
+    text-decoration: none;
+    color: lightgrey;
+}
+
+.alerts {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    width: 50%;
+    padding: 10px;
     list-style-type: none;
 }
 
 .centered {
-    margin: auto;
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
     width: 50%;
-    border: 3px solid darkred; 
     padding: 10px;
 }
+
+.row {
+    width: 100%;
+}
+
+.content {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5em;
+    text-align: center;
+    width: 50%;
+    padding: 10px;
+    border: 1px solid darkgrey;
+}
+
+.video {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5em;
+    display: block
+}
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+    margin: auto
+}  
