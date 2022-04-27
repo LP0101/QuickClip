@@ -1,6 +1,8 @@
 import os
 import string
 import random
+from unittest.util import _MAX_LENGTH
+import magic
 
 from flask import Flask, flash, render_template, request, redirect, send_from_directory
 # please note the import from `flask_uploads` - not `flask_reuploaded`!!
@@ -28,9 +30,10 @@ def upload_video():
         flash('No video selected for uploaded')
         return redirect(request.uri)
     else:
+        if not file.mimetype.startswith("video/"):
+            return "Not a video", 400
         filename = random_filename(8)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        flash('Video uploaded and displayed below')
         return redirect(f"/v/{filename}")
 
 @app.route('/files/<path:filename>')
@@ -40,7 +43,7 @@ def custom_static(filename):
     if os.path.isfile(full_path):
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
     else:
-        return "File not found", 400
+        return "File not found", 404
 
 @app.route('/v/<path:filename>')
 def display_video(filename):
