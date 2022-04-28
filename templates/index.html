@@ -28,9 +28,12 @@
                     </p>
                 </dl>
                 <p>
-                    <input class="button" type="submit" value="Upload">
+                    <input class="button" type="submit" value="Upload"><br />
                 </p>
             </form>
+            <div class="centered">
+                <input type="checkbox" id="clipboard" checked> <label for="clipboard">Send URL to Clipboard</label>
+            </div>
             <div class="progress-bar" id="progressBar">
                 <div class="progress-bar-fill">
                     <span class="progress-bar-text">0%</span>
@@ -70,8 +73,12 @@
                 }
                 else {
                     video = data.clip
+                    shareable_link = window.location.origin+"/v/"+video
                     await sleep(500) // Video is broken if the page is instantly loaded. Would be better if the video URL
-                    document.location.href = window.location.origin+"/v/"+video
+                    if (document.querySelector('#clipboard').checked) {
+                        navigator.clipboard.writeText(shareable_link);
+                    }
+                    document.location.href = shareable_link;
                 }
             }
         }
