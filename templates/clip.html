@@ -8,21 +8,33 @@
     <div class="header">
         <h1><a class="link" href="/">QuickClip</a></h1>
     </div>
+      <div class="messages">
+        <div id="loader" class="loader"></div>
+        <span id="message" class="centered" style="display: none;"></span>
+      </div>
       <div class="video">
         <video id="video" class="video" src="/files/{{filename}}" controls="controls" preload="preload" autoplay="autoplay" width="1280px" height="720px" />
-        </div>
+      </div>
   </body>
   <script>
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 let video = document.getElementById('video');
+let message = document.getElementById('message');
+let loader = document.getElementById('loader');
+
 document.addEventListener("DOMContentLoaded", async function () {
     console.log("In here!")
     let waiting = false;
     response = await fetch(window.location.origin+'/status/{{filename}}');
     status = response.status;
     console.log(status)
-    while(status == 420) {
+    if (status == 420) {
       video.style.display = 'none'
+      loader.style.display = 'block'
+      message.innerHTML = 'Processing.'
+      message.style.display = 'block';
+    }
+    while(status == 420) {
       waiting = true;
       console.log(waiting)
       await sleep(500);
@@ -30,7 +42,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       status = response.status;
     }
     if (waiting) {
+      message.style.display = 'none';
       video.style.display = 'block'
+      loader.style.display = 'none'
       video.load();
       video.play();
     }

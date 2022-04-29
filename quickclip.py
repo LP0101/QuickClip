@@ -6,6 +6,7 @@ import logging
 from glob import glob
 import subprocess
 import threading
+from multiprocessing import Manager
 
 from flask import Flask, flash, render_template, request, redirect, send_from_directory, jsonify, send_file
 
@@ -18,7 +19,7 @@ use_nvenc = os.getenv("QUICKCLIP_ENCODE_VIDEOS_NVENC", 'false') in ('true', 1, '
 
 logger = logging.getLogger()
 
-threads = {}
+threads = Manager().list()
 
 def check_variables():
     if not library_path:
@@ -51,6 +52,7 @@ def check_ip(request):
     return ip_address(ip) in ip_network(allowed_upload)
 
 def encode(filename, encode_path, clips_path, nvidia=False):
+    print(threads)
     final_file = os.path.join(clips_path, filename)
     unencoded_file = os.path.join(encode_path, filename)
     video_format = "h264_nvenc" if nvidia else "h264"
@@ -61,14 +63,10 @@ def encode(filename, encode_path, clips_path, nvidia=False):
     subprocess.run(ffmpeg_command, shell=True)
 
     os.remove(unencoded_file)
+    threads.remove(filename.split(".")[0])
 
 def encoding(filename):
-    if filename in threads:
-        if threads[filename].is_alive():
-            return True
-        else:
-            del threads[filename]
-    return False
+    return filename in threads
 
 
 @app.route('/')
@@ -97,9 +95,9 @@ def upload_video():
         filename = filename_no_ext+"."+extension
         if encode_upload:
             file.save(os.path.join(encode_path, filename))
+            threads.append(filename_no_ext)
             enc_job = threading.Thread(target=encode, args=(filename, encode_path, library_path), kwargs={"nvidia": True})
-            threads[filename_no_ext] = enc_job
-            threads[filename_no_ext].start()
+            enc_job.start()
         else:
             file.save(os.path.join(library_path, filename))
         response = {"success": True, "clip": filename.split(".")[0]}
