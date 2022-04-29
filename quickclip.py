@@ -5,6 +5,7 @@ from ipaddress import ip_network, ip_address
 import logging
 from glob import glob
 import subprocess
+import threading
 
 from flask import Flask, flash, render_template, request, redirect, send_from_directory, jsonify, send_file
 
@@ -16,6 +17,8 @@ encode_path = os.getenv("QUICKCLIP_ENCODE_PATH", os.path.join(library_path, "enc
 use_nvenc = os.getenv("QUICKCLIP_ENCODE_VIDEOS_NVENC", 'false') in ('true', 1, 't')
 
 logger = logging.getLogger()
+
+encoding_videos = []
 
 def check_variables():
     if not library_path:
@@ -48,21 +51,19 @@ def check_ip(request):
     return ip_address(ip) in ip_network(allowed_upload)
 
 def encode(filename, encode_path, clips_path, nvidia=False):
-    # temp_file = os.path.join(clips_path, filename+".enc")
+    temp_file = os.path.join(clips_path, filename+".enc")
     final_file = os.path.join(clips_path, filename)
     unencoded_file = os.path.join(encode_path, filename)
     video_format = "h264_nvenc" if nvidia else "h264"
-    # with open(temp_file, 'w') as f: pass # Write empty file 
+    with open(temp_file, 'w') as f: pass # Write empty file 
 
-    # ffmpeg_command = f"ffmpeg -i {unencoded_file} -c:v {video_format} -preset default -b:v 10000k {final_file}"
-    ffmpeg_command = f"ffmpeg -y -i - -c:v {video_format} -preset default -b:v 10000k {final_file}"
+    ffmpeg_command = f"ffmpeg -i {unencoded_file} -c:v {video_format} -c:a aac -preset default -b:v 10000k {final_file}"
 
 
-    subprocess.call(ffmpeg_command, shell=True)
+    subprocess.run(ffmpeg_command, shell=True)
 
     os.remove(unencoded_file)
-
-    # os.remove(temp_file)
+    os.remove(temp_file)
 
 
 @app.route('/')
@@ -90,7 +91,9 @@ def upload_video():
         filename = random_filename(8)+"."+extension
         if encode_upload:
             file.save(os.path.join(encode_path, filename))
-            encode(filename, encode_path, library_path, nvidia=True)
+            enc_job = threading.Thread(target=encode, args=(filename, encode_path, library_path), kwargs={"nvidia": True})
+            enc_job.start()
+            # encode(filename, encode_path, library_path, nvidia=True)
         else:
             file.save(os.path.join(library_path, filename))
         response = {"success": True, "clip": filename.split(".")[0]}
@@ -105,9 +108,13 @@ def custom_static(filename):
     except Exception as e:
         return "File not found", 404
     if os.path.isfile(full_path):
+        if full_path.endswith(".enc"):
+            return "Processing", 420
         return send_file(full_path)
     else:
         return "File not found", 404
+
+
 
 @app.route('/v/<path:filename>')
 def display_video(filename):
