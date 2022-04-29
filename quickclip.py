@@ -3,15 +3,17 @@ import string
 import random
 from ipaddress import ip_network, ip_address
 import logging
-from venv import create
-from time import sleep
 from glob import glob
+import subprocess
 
 from flask import Flask, flash, render_template, request, redirect, send_from_directory, jsonify, send_file
 
 
 library_path = os.getenv("QUICKCLIP_LIBRARY_PATH")
 allowed_upload = os.getenv("QUICKCLIP_ALLOWED_UPLOAD", "0.0.0.0/0")
+encode_upload = os.getenv("QUICKCLIP_ENCODE_VIDEOS", 'false') in ('true', '1', 't')
+encode_path = os.getenv("QUICKCLIP_ENCODE_PATH", os.path.join(library_path, "enc"))
+use_nvenc = os.getenv("QUICKCLIP_ENCODE_VIDEOS_NVENC", 'false') in ('true', 1, 't')
 
 logger = logging.getLogger()
 
@@ -45,6 +47,24 @@ def check_ip(request):
         ip = request.remote_addr
     return ip_address(ip) in ip_network(allowed_upload)
 
+def encode(filename, encode_path, clips_path, nvidia=False):
+    # temp_file = os.path.join(clips_path, filename+".enc")
+    final_file = os.path.join(clips_path, filename)
+    unencoded_file = os.path.join(encode_path, filename)
+    video_format = "h264_nvenc" if nvidia else "h264"
+    # with open(temp_file, 'w') as f: pass # Write empty file 
+
+    # ffmpeg_command = f"ffmpeg -i {unencoded_file} -c:v {video_format} -preset default -b:v 10000k {final_file}"
+    ffmpeg_command = f"ffmpeg -y -i - -c:v {video_format} -preset default -b:v 10000k {final_file}"
+
+
+    subprocess.call(ffmpeg_command, shell=True)
+
+    os.remove(unencoded_file)
+
+    # os.remove(temp_file)
+
+
 @app.route('/')
 def upload_form():
     allowed_upload = check_ip(request)
@@ -67,11 +87,14 @@ def upload_video():
             response = {"success": False, "message": "File is not a video"}
             status_code = 400
         extension = file.filename.split(".")[-1]
-        filename = random_filename(8)
-        file.save(os.path.join(library_path, filename+"."+extension))
-        response = {"success": True, "clip": filename}
+        filename = random_filename(8)+"."+extension
+        if encode_upload:
+            file.save(os.path.join(encode_path, filename))
+            encode(filename, encode_path, library_path, nvidia=True)
+        else:
+            file.save(os.path.join(library_path, filename))
+        response = {"success": True, "clip": filename.split(".")[0]}
         status_code = 200
-        sleep(1)
     return jsonify(response), status_code
 
 
