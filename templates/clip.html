@@ -9,12 +9,31 @@
         <h1><a class="link" href="/">QuickClip</a></h1>
     </div>
       <div class="video">
-        <video class="video" src="{{filename}}" controls="controls" preload="preload" autoplay="autoplay" width="1280px" height="720px" />
+        <video id="video" class="video" src="/files/{{filename}}" controls="controls" preload="preload" autoplay="autoplay" width="1280px" height="720px" />
         </div>
   </body>
   <script>
-object.addEventListener("load", async () => {
-  
+const sleep = ms => new Promise(res => setTimeout(res, ms));
+let video = document.getElementById('video');
+document.addEventListener("DOMContentLoaded", async function () {
+    console.log("In here!")
+    let waiting = false;
+    response = await fetch(window.location.origin+'/status/{{filename}}');
+    status = response.status;
+    console.log(status)
+    while(status == 420) {
+      video.style.display = 'none'
+      waiting = true;
+      console.log(waiting)
+      await sleep(500);
+      response = await fetch(window.location.origin+'/status/{{filename}}');
+      status = response.status;
+    }
+    if (waiting) {
+      video.style.display = 'block'
+      video.load();
+      video.play();
+    }
 })
   </script>
 </html>

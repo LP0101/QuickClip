@@ -18,7 +18,7 @@ use_nvenc = os.getenv("QUICKCLIP_ENCODE_VIDEOS_NVENC", 'false') in ('true', 1, '
 
 logger = logging.getLogger()
 
-encoding_videos = []
+threads = {}
 
 def check_variables():
     if not library_path:
@@ -51,19 +51,24 @@ def check_ip(request):
     return ip_address(ip) in ip_network(allowed_upload)
 
 def encode(filename, encode_path, clips_path, nvidia=False):
-    temp_file = os.path.join(clips_path, filename+".enc")
     final_file = os.path.join(clips_path, filename)
     unencoded_file = os.path.join(encode_path, filename)
     video_format = "h264_nvenc" if nvidia else "h264"
-    with open(temp_file, 'w') as f: pass # Write empty file 
 
-    ffmpeg_command = f"ffmpeg -i {unencoded_file} -c:v {video_format} -c:a aac -preset default -b:v 10000k {final_file}"
+    ffmpeg_command = f"ffmpeg -i {unencoded_file} -vsync passthrough -movflags faststart -c:v {video_format} -c:a aac -preset default -b:v 10000k {final_file}"
 
 
     subprocess.run(ffmpeg_command, shell=True)
 
     os.remove(unencoded_file)
-    os.remove(temp_file)
+
+def encoding(filename):
+    if filename in threads:
+        if threads[filename].is_alive():
+            return True
+        else:
+            del threads[filename]
+    return False
 
 
 @app.route('/')
@@ -88,12 +93,13 @@ def upload_video():
             response = {"success": False, "message": "File is not a video"}
             status_code = 400
         extension = file.filename.split(".")[-1]
-        filename = random_filename(8)+"."+extension
+        filename_no_ext = random_filename(8)
+        filename = filename_no_ext+"."+extension
         if encode_upload:
             file.save(os.path.join(encode_path, filename))
             enc_job = threading.Thread(target=encode, args=(filename, encode_path, library_path), kwargs={"nvidia": True})
-            enc_job.start()
-            # encode(filename, encode_path, library_path, nvidia=True)
+            threads[filename_no_ext] = enc_job
+            threads[filename_no_ext].start()
         else:
             file.save(os.path.join(library_path, filename))
         response = {"success": True, "clip": filename.split(".")[0]}
@@ -103,19 +109,24 @@ def upload_video():
 
 @app.route('/files/<path:filename>')
 def custom_static(filename):
+    if encoding(filename):
+        return "Processing", 420
     try:
         full_path = glob(os.path.join(library_path, filename)+"*")[0]
     except Exception as e:
         return "File not found", 404
     if os.path.isfile(full_path):
-        if full_path.endswith(".enc"):
-            return "Processing", 420
-        return send_file(full_path)
+        return send_file(full_path, cache_timeout=0)
     else:
         return "File not found", 404
 
+@app.route('/status/<path:filename>')
+def get_status(filename):
+    if encoding(filename):
+        return "Processing", 420
+    return "Done", 200
 
 
 @app.route('/v/<path:filename>')
 def display_video(filename):
-    return render_template('clip.html', filename=f"/files/{filename}")
+    return render_template('clip.html', filename=f"{filename}")
