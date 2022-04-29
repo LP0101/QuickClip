@@ -5,8 +5,9 @@ from ipaddress import ip_network, ip_address
 import logging
 from venv import create
 from time import sleep
+from glob import glob
 
-from flask import Flask, flash, render_template, request, redirect, send_from_directory, jsonify
+from flask import Flask, flash, render_template, request, redirect, send_from_directory, jsonify, send_file
 
 
 library_path = os.getenv("QUICKCLIP_LIBRARY_PATH")
@@ -65,8 +66,9 @@ def upload_video():
         if not file.mimetype.startswith("video/"):
             response = {"success": False, "message": "File is not a video"}
             status_code = 400
+        extension = file.filename.split(".")[-1]
         filename = random_filename(8)
-        file.save(os.path.join(library_path, filename))
+        file.save(os.path.join(library_path, filename+"."+extension))
         response = {"success": True, "clip": filename}
         status_code = 200
         sleep(1)
@@ -75,10 +77,12 @@ def upload_video():
 
 @app.route('/files/<path:filename>')
 def custom_static(filename):
-    full_path = os.path.join(library_path, filename)
-
+    try:
+        full_path = glob(os.path.join(library_path, filename)+"*")[0]
+    except Exception as e:
+        return "File not found", 404
     if os.path.isfile(full_path):
-        return send_from_directory(library_path, filename)
+        return send_file(full_path)
     else:
         return "File not found", 404
 
