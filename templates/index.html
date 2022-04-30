@@ -11,16 +11,10 @@
     <div class="header">
         <h1><a class="link" href="/">QuickClip</a></h1>
     </div>
-    {% with messages = get_flashed_messages() %} {% if messages %}
     <p>
-        <ul class="alerts">
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
+        <ul class="alerts" id="alerts">
         </ul>
     </p>
-    {% endif %} {% endwith %}
-    {% if allowed_upload %}
         <div class="content">
             <form class="centered" id="uploadForm">
                 <dl>
@@ -70,7 +64,11 @@
                 data = JSON.parse(xhr.responseText);
                 status = xhr.status;
                 if (status != 200 ) {
-                    alert(`Error ${status}: ${data.message}`);
+                    let el = document.createElement("li"),
+                        content = document.createTextNode("Error uploading video"),
+                        alerts = document.getElementById("alerts")
+                    el.appendChild(content)
+                    alerts.appendChild(el)
                 }
                 else {
                     video = data.clip
@@ -84,7 +82,6 @@
             }
         }
     </script>
-    {% endif %}
 </body>
 
 </html>

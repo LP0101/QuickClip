@@ -85,31 +85,34 @@ def upload_form():
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
+    response = {}
+    status_code = 500
     if not check_ip(request):
         response = {"success": False, "message": "You are not authorized to upload"}
         status_code = 401
-    if 'clip' not in request.files:
+    elif 'clip' not in request.files:
         response = {"success": False, "message": "'clip' not found in upload"}
         status_code = 400
-    file = request.files['clip']
-    if file.filename == '':
-        response = {"success": False, "message": "empty upload"}
-        status_code = 400
     else:
-        if not file.mimetype.startswith("video/"):
+        file = request.files['clip']
+        if file.filename == '':
+            response = {"success": False, "message": "empty upload"}
+            status_code = 400
+        elif not file.mimetype.startswith("video/"):
             response = {"success": False, "message": "File is not a video"}
             status_code = 400
-        extension = file.filename.split(".")[-1]
-        filename_no_ext = random_filename(8)
-        filename = filename_no_ext+"."+extension
-        if encode_upload:
-            file.save(os.path.join(encode_path, filename))
-            enc_job = threading.Thread(target=encode, args=(filename, "nvidia"))
-            enc_job.start()
         else:
-            file.save(os.path.join(library_path, filename))
-        response = {"success": True, "clip": filename.split(".")[0]}
-        status_code = 200
+            extension = file.filename.split(".")[-1]
+            filename_no_ext = random_filename(8)
+            filename = filename_no_ext+"."+extension
+            if encode_upload:
+                file.save(os.path.join(encode_path, filename))
+                enc_job = threading.Thread(target=encode, args=(filename, "nvidia"))
+                enc_job.start()
+            else:
+                file.save(os.path.join(library_path, filename))
+            response = {"success": True, "clip": filename.split(".")[0]}
+            status_code = 200
     return jsonify(response), status_code
 
 
@@ -118,7 +121,7 @@ def custom_static(filename):
     if encoding(filename):
         return "Processing", 420
     try:
-        full_path = glob(os.path.join(library_path, filename)+"*")[0]
+        full_path = glob(os.path.join(library_path, filename)+".*")[0]
     except Exception as e:
         return "File not found", 404
     if os.path.isfile(full_path):
@@ -130,6 +133,10 @@ def custom_static(filename):
 def get_status(filename):
     if encoding(filename):
         return "Processing", 420
+    try:
+        glob(os.path.join(library_path, filename)+".*")[0]
+    except Exception as e:
+        return "File not found", 404
     return "Done", 200
 
 

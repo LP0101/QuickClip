@@ -21,6 +21,8 @@ body {
     width: 50%;
     padding: 10px;
     list-style-type: none;
+    color: red;
+    font-size: 25px;
 }
 
 .centered {
@@ -57,7 +59,6 @@ body {
     border-top: 16px solid lightgrey;
     -webkit-animation: spin 2s linear infinite;
     animation: spin 2s linear infinite;
-    display: none;
   }
   
   @-webkit-keyframes spin {
@@ -85,13 +86,13 @@ body {
     max-height: 100%;
     overflow: auto;
     font-size: 1.875em;
+    text-align: center;
 }
 
 .video {
     margin-left: auto;
     margin-right: auto;
     margin-top: 5em;
-    display: block
 }
 
 .row:after {
