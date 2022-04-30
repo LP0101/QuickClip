@@ -54,7 +54,7 @@ body {
     margin: -76px 0 0 -76px;
     border: 16px solid #6e6e6e;
     border-radius: 50%;
-    border-top: 16px solid #3498db;
+    border-top: 16px solid lightgrey;
     -webkit-animation: spin 2s linear infinite;
     animation: spin 2s linear infinite;
     display: none;
