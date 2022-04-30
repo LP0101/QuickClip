@@ -4,9 +4,10 @@ import random
 from ipaddress import ip_network, ip_address
 import logging
 from glob import glob
-import subprocess
 import threading
 from multiprocessing import Manager
+import ffmpeg
+from io import BytesIO
 
 from flask import Flask, flash, render_template, request, redirect, send_from_directory, jsonify, send_file
 
@@ -31,6 +32,12 @@ def check_variables():
 def create_app():
     app = Flask(__name__)
     check_variables()
+    if encode_path == os.path.join(library_path, "enc"):
+        logger.info("Using default encode path {os.path.join(library_path, 'enc)}. Creating directory")
+        try:
+            os.mkdir(encode_path)
+        except FileExistsError:
+            pass
     return app
 
 app = create_app()
@@ -51,17 +58,18 @@ def check_ip(request):
         ip = request.remote_addr
     return ip_address(ip) in ip_network(allowed_upload)
 
-def encode(filename, encode_path, clips_path, nvidia=False):
-    print(threads)
-    final_file = os.path.join(clips_path, filename)
+def encode(filename, hwenc):
+    final_file = os.path.join(library_path, filename)
     unencoded_file = os.path.join(encode_path, filename)
-    video_format = "h264_nvenc" if nvidia else "h264"
-
-    ffmpeg_command = f"ffmpeg -i {unencoded_file} -vsync passthrough -movflags faststart -c:v {video_format} -c:a aac -preset default -b:v 10000k {final_file}"
-
-
-    subprocess.run(ffmpeg_command, shell=True)
-
+    video_format = "h264_nvenc" if hwenc == "nvidia" else "h264"
+    threads.append(filename.split(".")[0])
+    (
+        ffmpeg
+        .input(unencoded_file,)
+        .output(final_file, movflags="faststart", vsync="passthrough", acodec="aac", vcodec=video_format, preset="default", video_bitrate = "10000k", format="mp4")
+        .run()
+        
+    )
     os.remove(unencoded_file)
     threads.remove(filename.split(".")[0])
 
@@ -95,8 +103,7 @@ def upload_video():
         filename = filename_no_ext+"."+extension
         if encode_upload:
             file.save(os.path.join(encode_path, filename))
-            threads.append(filename_no_ext)
-            enc_job = threading.Thread(target=encode, args=(filename, encode_path, library_path), kwargs={"nvidia": True})
+            enc_job = threading.Thread(target=encode, args=(filename, "nvidia"))
             enc_job.start()
         else:
             file.save(os.path.join(library_path, filename))
