@@ -1,0 +1,9 @@
+FROM ghcr.io/lp0101/python-ffmpeg
+COPY . /app
+RUN pip install --upgrade pip && pip install --upgrade setuptools
+RUN apt-get update && apt-get install -y gcc build-essential python3-dev
+WORKDIR /app
+RUN pip install -r requirements.txt
+RUN apt-get remove -y gcc build-essential python3-dev && apt-get -y autoremove
+EXPOSE 5000
+CMD ["/app/start.sh"]
