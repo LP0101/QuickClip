@@ -16,6 +16,7 @@ library_path = os.getenv("QUICKCLIP_LIBRARY_PATH")
 allowed_upload = os.getenv("QUICKCLIP_ALLOWED_UPLOAD", "0.0.0.0/0")
 encode_upload = os.getenv("QUICKCLIP_ENCODE_VIDEOS", 'false') in ('true', '1', 't')
 encode_path = os.getenv("QUICKCLIP_ENCODE_PATH", os.path.join(library_path, "enc"))
+encode_video_bitrate = os.getenv("QUICKCLIP_ENCODE_BITRATE", "10000k")
 use_nvenc = os.getenv("QUICKCLIP_ENCODE_VIDEOS_NVENC", 'false') in ('true', 1, 't')
 
 logger = logging.getLogger()
@@ -66,7 +67,7 @@ def encode(filename, hwenc):
     (
         ffmpeg
         .input(unencoded_file,)
-        .output(final_file, movflags="faststart", vsync="passthrough", acodec="aac", vcodec=video_format, preset="default", video_bitrate = "10000k", format="mp4")
+        .output(final_file, movflags="faststart", vsync="passthrough", acodec="aac", vcodec=video_format, preset="default", video_bitrate = encode_video_bitrate, format="mp4")
         .run()
         
     )

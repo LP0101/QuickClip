@@ -57,6 +57,7 @@ body {
     border-top: 16px solid #3498db;
     -webkit-animation: spin 2s linear infinite;
     animation: spin 2s linear infinite;
+    display: none;
   }
   
   @-webkit-keyframes spin {

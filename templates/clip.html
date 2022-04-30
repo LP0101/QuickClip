@@ -2,6 +2,7 @@
   <head>
     <meta charset="UTF-8">
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <title>QuickClip</title>
   </head>
   <body>
@@ -9,11 +10,11 @@
         <h1><a class="link" href="/">QuickClip</a></h1>
     </div>
       <div class="messages">
-        <div id="loader" class="loader"></div>
+        <div id="loader" class="loader" stlye="display: none;"></div>
         <span id="message" class="centered" style="display: none;"></span>
       </div>
       <div class="video">
-        <video id="video" class="video" src="/files/{{filename}}" controls="controls" preload="preload" autoplay="autoplay" width="1280px" height="720px" />
+        <video id="video" class="video" src="/files/{{filename}}" controls="controls" preload="auto" autoplay="autoplay" width="1280px" height="720px" />
       </div>
   </body>
   <script>
@@ -23,11 +24,9 @@ let message = document.getElementById('message');
 let loader = document.getElementById('loader');
 
 document.addEventListener("DOMContentLoaded", async function () {
-    console.log("In here!")
     let waiting = false;
     response = await fetch(window.location.origin+'/status/{{filename}}');
     status = response.status;
-    console.log(status)
     if (status == 420) {
       video.style.display = 'none'
       loader.style.display = 'block'
@@ -36,7 +35,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     while(status == 420) {
       waiting = true;
-      console.log(waiting)
       await sleep(500);
       response = await fetch(window.location.origin+'/status/{{filename}}');
       status = response.status;
