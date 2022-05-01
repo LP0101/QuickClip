@@ -24,22 +24,20 @@ let message = document.getElementById('message');
 let loader = document.getElementById('loader');
 
 document.addEventListener("DOMContentLoaded", async function () {
-    let waiting = false;
-    response = await fetch(window.location.origin+'/status/{{filename}}');
+    response = await fetch('/status/{{filename}}');
     status = response.status;
+    console.log(status)
     if (status == 404){
       loader.style.display = 'none';
       message.style.display = 'block';
       message.innerHTML = 'Video not found';
     }
     while(status == 420) {
-      waiting = true;
       await sleep(500);
-      response = await fetch(window.location.origin+'/status/{{filename}}');
+      response = await fetch('/status/{{filename}}');
       status = response.status;
     }
-    if (waiting || status == 200) {
-      console.log("foo")
+    if (status == 200) {
       message.style.display = 'none';
       video.style.display = 'block';
       loader.style.display = 'none';
