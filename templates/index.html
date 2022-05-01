@@ -21,7 +21,7 @@
                     <p>
                         <input type="file" name="clip" id="inpFile">
                     </p>
-                    {% if not allowed_upload %}
+                    {% if require_password %}
                         <label for="password">Upload Password: </label><br /><input type="text" name="password" id="password"/>
                     {% endif %}
                 </dl>

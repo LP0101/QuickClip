@@ -82,7 +82,7 @@ def encoding(filename):
 
 @app.route('/')
 def upload_form():
-    require_password = check_ip(request)
+    require_password = not check_ip(request)
     return render_template('index.html', require_password=require_password)
 
 @app.route('/upload', methods=['POST'])
