@@ -43,6 +43,7 @@ def create_app():
     return app
 
 app = create_app()
+app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024 * 1024 # 1 GB
 logger = logging.getLogger()
 app.secret_key = os.urandom(24)
 
