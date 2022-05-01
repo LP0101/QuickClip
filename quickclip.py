@@ -14,6 +14,7 @@ from flask import Flask, flash, render_template, request, redirect, send_from_di
 
 library_path = os.getenv("QUICKCLIP_LIBRARY_PATH")
 allowed_upload = os.getenv("QUICKCLIP_ALLOWED_UPLOAD", "0.0.0.0/0")
+upload_password = os.getenv("QUICKCLIP_UPLOAD_PASSWORD")
 encode_upload = os.getenv("QUICKCLIP_ENCODE_VIDEOS", 'false') in ('true', '1', 't')
 encode_path = os.getenv("QUICKCLIP_ENCODE_PATH", os.path.join(library_path, "enc"))
 encode_video_bitrate = os.getenv("QUICKCLIP_ENCODE_BITRATE", "10000k")
@@ -80,16 +81,17 @@ def encoding(filename):
 
 @app.route('/')
 def upload_form():
-    allowed_upload = check_ip(request)
-    return render_template('index.html', allowed_upload=allowed_upload)
+    require_password = check_ip(request) and upload_password is not None
+    return render_template('index.html', require_password=require_password)
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
     response = {}
     status_code = 500
-    if not check_ip(request):
-        response = {"success": False, "message": "You are not authorized to upload"}
-        status_code = 401
+    if (not check_ip(request)) and \
+        (upload_password is None or "password" not in request.form or request.form.get("password") != upload_password):
+            response = {"success": False, "message": "You are not authorized to upload"}
+            status_code = 401
     elif 'clip' not in request.files:
         response = {"success": False, "message": "'clip' not found in upload"}
         status_code = 400

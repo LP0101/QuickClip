@@ -21,6 +21,9 @@
                     <p>
                         <input type="file" name="clip" id="inpFile">
                     </p>
+                    {% if not allowed_upload %}
+                        <label for="password">Upload Password: </label><br /><input type="text" name="password" id="password"/>
+                    {% endif %}
                 </dl>
                 <p>
                     <input class="button" type="submit" value="Upload"><br />
@@ -73,7 +76,7 @@
                 else {
                     video = data.clip
                     shareable_link = window.location.origin+"/v/"+video
-                    await sleep(500) // Video is broken if the page is instantly loaded. Would be better if the video URL
+                    await sleep(500) // Video is broken if the page is instantly loaded
                     if (document.querySelector('#clipboard').checked) {
                         navigator.clipboard.writeText(shareable_link);
                     }
