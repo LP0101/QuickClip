@@ -89,11 +89,14 @@ body {
     text-align: center;
 }
 
-.video {
+.video-container {
     margin-left: auto;
     margin-right: auto;
     margin-top: 5em;
+    max-width: 85%;
+    height: auto;
 }
+
 
 .row:after {
     content: "";

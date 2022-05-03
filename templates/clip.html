@@ -9,12 +9,12 @@
     <div class="header">
         <h1><a class="link" href="/">QuickClip</a></h1>
     </div>
-      <div class="messages">
+      <div class="video-container">
+        <div class="messages">
         <div id="loader" class="loader"></div>
         <span id="message" class="centered">Processing</span>
       </div>
-      <div class="video">
-        <video id="video" class="video" src="/files/{{filename}}" controls="controls" preload="auto" autoplay="autoplay" width="1280px" height="720px" style="display: none;"/>
+        <video id="video" src="/files/{{filename}}" controls="controls" preload="auto" autoplay="autoplay" width="100%" height="720px" style="display: none;"/>
       </div>
   </body>
   <script>
