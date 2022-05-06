@@ -19,6 +19,7 @@ encode_upload = os.getenv("QUICKCLIP_ENCODE_VIDEOS", 'false') in ('true', '1', '
 encode_path = os.getenv("QUICKCLIP_ENCODE_PATH", os.path.join(library_path, "enc"))
 encode_video_bitrate = os.getenv("QUICKCLIP_ENCODE_BITRATE", "10000k")
 use_nvenc = os.getenv("QUICKCLIP_ENCODE_VIDEOS_NVENC", 'false') in ('true', 1, 't')
+external_url = os.getenv("QUICKCLIP_EXTERNAL_URL")
 
 logger = logging.getLogger()
 
@@ -145,4 +146,4 @@ def get_status(filename):
 
 @app.route('/v/<path:filename>')
 def display_video(filename):
-    return render_template('clip.html', filename=f"{filename}")
+    return render_template('clip.html', filename=f"{filename}", external_url=external_url)

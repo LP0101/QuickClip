@@ -4,6 +4,12 @@
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <title>QuickClip</title>
+    <meta property="og:title" content="QuickClip" />
+    <meta property="og:type" content="video" />
+    <meta property="og:description" content="The easy video sharing solution" />
+    {% if external_url is not none %}
+    <meta property="og:video" content="{{external_url}}/files/{{filename}}" />
+    {% endif %}
   </head>
   <body>
     <div class="header">
