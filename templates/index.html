@@ -4,28 +4,26 @@
 
 <head>
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
 
 <body>
     <div class="header">
         <h1><a class="link" href="/">QuickClip</a></h1>
     </div>
-    {% with messages = get_flashed_messages() %} {% if messages %}
     <p>
-        <ul class="alerts">
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
+        <ul class="alerts" id="alerts">
         </ul>
     </p>
-    {% endif %} {% endwith %}
-    {% if allowed_upload %}
         <div class="content">
             <form class="centered" id="uploadForm">
                 <dl>
                     <p>
                         <input type="file" name="clip" id="inpFile">
                     </p>
+                    {% if require_password %}
+                        <label for="password" id="password-label" class="centered">Upload Password: </label><br id="password-br" class="centered" /><input type="text" name="password" id="password" class="centered"/>
+                    {% endif %}
                 </dl>
                 <p>
                     <input class="button" type="submit" value="Upload"><br />
@@ -47,11 +45,25 @@
         const progressBarFill = document.querySelector("#progressBar > .progress-bar-fill");
         const progressBarText = progressBarFill.querySelector(".progress-bar-text");
         const sleep = ms => new Promise(res => setTimeout(res, ms));
+        cookies = Object.fromEntries(document.cookie.split('; ').map(v=>v.split(/=(.*)/s).map(decodeURIComponent)))
+
+        document.addEventListener("DOMContentLoaded", function () {
+            if (!document.body.contains(document.getElementById('password'))) { 
+                return
+            }
+            if(cookies.hasOwnProperty('password') && cookies.password != ""){
+                document.getElementById("password").style.display = "none"
+                document.getElementById("password").value = cookies.password
+                document.getElementById("password-label").style.display = "none"
+                document.getElementById("password-br").style.display = "none"
+            } 
+        })
 
         uploadForm.addEventListener("submit", uploadFile);
 
         function uploadFile (e) {
             e.preventDefault();
+
 
             const xhr = new XMLHttpRequest();
 
@@ -68,13 +80,34 @@
             xhr.onload = async function() {
                 data = JSON.parse(xhr.responseText);
                 status = xhr.status;
-                if (status != 200 ) {
-                    alert(`Error ${status}: ${data.message}`);
+                if (status == 401 && cookies.hasOwnProperty('password')) {
+                    document.cookie = 'password=; expires = Thu, 01 Jan 1970 00:00:00 GMT'
+                    let el = document.createElement("li"),
+                        content = document.createTextNode("Please retry"),
+                        alerts = document.getElementById("alerts")
+                    el.appendChild(content)
+                    alerts.appendChild(el)
+                    document.getElementById("password").style.display = "block"
+                    document.getElementById("password").value = ""
+                    document.getElementById("password-label").style.display = "block"
+                    document.getElementById("password-br").style.display = "block"
+                }
+                else if (status != 200 ) {
+                    let el = document.createElement("li"),
+                        content = document.createTextNode("Error uploading video"),
+                        alerts = document.getElementById("alerts")
+                    el.appendChild(content)
+                    alerts.appendChild(el)
                 }
                 else {
+                    if (document.body.contains(document.getElementById('password'))) {
+                        console.log("ahhhh")
+                        password = document.getElementById("password").value;
+                        document.cookie = `password=${password}; expires = Fri, 31 Dec 9999 23:59:59 GMT; SameSite=Strict`;
+                    }
                     video = data.clip
                     shareable_link = window.location.origin+"/v/"+video
-                    await sleep(500) // Video is broken if the page is instantly loaded. Would be better if the video URL
+                    await sleep(500) // Video is broken if the page is instantly loaded
                     if (document.querySelector('#clipboard').checked) {
                         navigator.clipboard.writeText(shareable_link);
                     }
@@ -83,7 +116,6 @@
             }
         }
     </script>
-    {% endif %}
 </body>
 
 </html>
