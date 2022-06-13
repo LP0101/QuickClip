@@ -1,14 +1,15 @@
-<html>
+<!DOCTYPE HTML>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <title>QuickClip</title>
-    <meta property="og:title" content="QuickClip" />
-    <meta property="og:type" content="video" />
-    <meta property="og:description" content="The easy video sharing solution" />
+    <meta property="og:title" value="QuickClip" />
+    <meta property="og:type" value="video" />
+    <meta property="og:description" value="The easy video sharing solution" />
     {% if external_url is not none %}
-    <meta property="og:video" content="{{external_url}}/files/{{filename}}" />
+    <meta property="og:video" value="{{external_url}}/files/{{filename}}" />
     {% endif %}
   </head>
   <body>
