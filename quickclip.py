@@ -10,6 +10,7 @@ import ffmpeg
 from io import BytesIO
 
 from flask import Flask, flash, render_template, request, redirect, send_from_directory, jsonify, send_file
+from flask_cors import CORS
 
 
 library_path = os.getenv("QUICKCLIP_LIBRARY_PATH")
@@ -47,6 +48,7 @@ app = create_app()
 app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024 * 1024 # 1 GB
 logger = logging.getLogger()
 app.secret_key = os.urandom(24)
+CORS(app)
 
 def random_filename(length):
     str = string.ascii_lowercase
